@@ -1,0 +1,63 @@
+    
+# Note: the DockerHub secret needs to be stored on the node you want to use
+# for building and pushing images (login through docker)
+dockerhub:
+    username: mhubai
+
+# Note: GitHub pull access needs to be setup for the specified repo
+# on the node you want to use for building and pushing images
+github:
+    # better if this is separated from the git folders users actually work into to avoid mess
+    repository_folder: /home/mhubai/git/mhubai-org/models
+    repository_url: https://github.com/MHubAI/models
+    branch: main
+
+# everything related to the timing of the build and push
+time:
+    # when to check for updates (HH:MM:SS)
+    auto_build:
+        - "00:00:00"
+        - "12:00:00"
+
+
+# repository structure: which Dockerfiles should be built and pushed automatically
+
+# relative path (wrt `folder`) of the docker images to build
+# the images will be tagged following the structure:
+# $DOCKERHUB_USERNAME/$REPOSITORY:$TAG
+# where:
+#   - $DOCKERHUB_USERNAME is set above
+#   - $REPOSITORY is the name of model folder, specified in the dictionary below as the first  
+#     key of the dictionary "images"
+#   - $TAG is the name of the subfolder in `dockerfiles` where the Dockerfile is found, specified 
+#     in the dictionary below as the second key of the dictionary "images" (sub-key of the first key)
+
+images:
+    base:
+        nocuda:   models/base/dockerfiles/nocuda/Dockerfile
+        cuda11.4: models/base/dockerfiles/cuda11.4/Dockerfile
+        cuda12.0: models/base/dockerfiles/cuda12.0/Dockerfile
+
+    totalsegmentator:
+        nocuda:   models/models/totalsegmentator/dockerfiles/nocuda/Dockerfile
+        cuda11.4: models/models/totalsegmentator/dockerfiles/cuda11.4/Dockerfile
+        cuda12.0: models/models/totalsegmentator/dockerfiles/cuda12.0/Dockerfile
+
+    platipy:
+        nocuda:   models/models/platipy/dockerfiles/nocuda/Dockerfile
+        cuda11.4: models/models/platipy/dockerfiles/cuda11.4/Dockerfile
+        cuda12.0: models/models/platipy/dockerfiles/cuda12.0/Dockerfile
+    
+    nnunet_liver:
+        nocuda:   models/models/nnunet_liver/dockerfiles/nocuda/Dockerfile
+        cuda11.4: models/models/nnunet_liver/dockerfiles/cuda11.4/Dockerfile
+        cuda12.0: models/models/nnunet_liver/dockerfiles/cuda12.0/Dockerfile
+
+    lungmask:
+        nocuda:   models/models/lungmask/dockerfiles/nocuda/Dockerfile
+        cuda11.4: models/models/lungmask/dockerfiles/cuda11.4/Dockerfile
+        cuda12.0: models/models/lungmask/dockerfiles/cuda12.0/Dockerfile
+
+
+
+
