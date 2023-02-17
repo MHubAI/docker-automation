@@ -25,7 +25,6 @@ pp = pprint.PrettyPrinter(indent=2)
 
 # TO-DO: move the functions below to a separate file
 
-
 def build_docker_image(image_dict, verbose):
     
     # get the path to the Dockerfile
@@ -46,11 +45,15 @@ def build_docker_image(image_dict, verbose):
 
     # build the docker image
     # TO-DO: add checks on the docker build
-    # TO-DO: add option to build the image without pushing it to the registry
     bash_command = ["docker", "build",
                     "--file", "%s"%path_to_dockerfile,
                     "--tag", "%s"%image_tag,
-                    "--no-cache", "."]
+                    "--no-cache"]
+
+    if not verbose:
+        bash_command += ["--quiet", "."]
+    else:
+        bash_command += ["."]
 
     if verbose:
         print("Running the shell command:\n", " ".join(bash_command), "\n")
@@ -69,6 +72,8 @@ def push_docker_image(image_tag, verbose):
     # push the docker image to the registry
     # TO-DO: add checks on the docker push
     bash_command = ["docker", "push", "%s"%(image_tag)]
+
+    if not verbose: bash_command += ["--quiet"]
     
     output = subprocess.run(bash_command, check=True, text=True,
                             stdout=None if verbose else subprocess.DEVNULL,

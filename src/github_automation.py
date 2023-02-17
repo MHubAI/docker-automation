@@ -22,7 +22,6 @@ pp = pprint.PrettyPrinter(indent=2)
 
 # TO-DO: move the functions below to a separate file
 
-
 def build_docker_image(image_dict, verbose):
     
     # get the path to the Dockerfile
@@ -43,17 +42,20 @@ def build_docker_image(image_dict, verbose):
 
     # build the docker image
     # TO-DO: add checks on the docker build
-    # TO-DO: add option to build the image without pushing it to the registry
     bash_command = ["docker", "build",
                     "--file", "%s"%path_to_dockerfile,
                     "--tag", "%s"%image_tag,
-                    "--no-cache", "."]
+                    "--no-cache"]
+
+    if not verbose:
+        bash_command += ["--quiet", "."]
+    else:
+        bash_command += ["."]
 
     if verbose:
         print("Running the shell command:\n", " ".join(bash_command), "\n")
         time.sleep(2)
 
-    # TO-DO: add logging
     output = subprocess.run(bash_command, check=True, text=True,
                             stdout=None if verbose else subprocess.DEVNULL,
                             stderr=None if verbose else subprocess.DEVNULL)
@@ -66,6 +68,8 @@ def push_docker_image(image_tag, verbose):
     # push the docker image to the registry
     # TO-DO: add checks on the docker push
     bash_command = ["docker", "push", "%s"%(image_tag)]
+
+    if not verbose: bash_command += ["--quiet"]
     
     output = subprocess.run(bash_command, check=True, text=True,
                             stdout=None if verbose else subprocess.DEVNULL,
@@ -79,7 +83,6 @@ def main():
 
     # parse command line arguments
     parser = argparse.ArgumentParser(description='MHub - GitHub automation for docker builds')
-    #parser.add_argument('-l', '--logging', action='store_true', help='enable logging')
     parser.add_argument('-v', '--verbose', action='store_true', help='enable verbose mode')
     parser.add_argument('--dryrun', action='store_true', help='execute in dry run mode')
     parser.add_argument('-c', '--config', action='store', help='path to config file', required=True)

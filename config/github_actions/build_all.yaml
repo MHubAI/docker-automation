@@ -18,7 +18,7 @@ images:
         version: cuda12.0
         dockerfile: base/dockerfiles/cuda12.0/Dockerfile
 
-totalsegmentator_nocuda:
+    totalsegmentator_nocuda:
         name: totalsegmentator
         version: nocuda
         dockerfile: models/totalsegmentator/dockerfiles/nocuda/Dockerfile

@@ -36,4 +36,4 @@ jobs:
           pip install -r ./requirements.txt
 
       - name: execute python script
-        run: python ./src/github_automation.py --config "./config/github_actions/build_all.yaml" --verbose
+        run: python ./src/github_automation.py --config "./config/github_actions/build_all.yaml"
