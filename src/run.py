@@ -155,6 +155,7 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true', help='enable verbose mode')
     parser.add_argument('--dryrun', action='store_true', help='execute in dry run mode')
     parser.add_argument('-c', '--config', action='store', help='path to config file', required=True)
+    parser.add_argument('-p', '--push', action='store_true', help='whether to push the images or not')
 
     args = parser.parse_args()
 
@@ -192,12 +193,15 @@ def main():
 
         # TO-DO: add option to build only the images that have changed
         if args.dryrun:
-            print("docker build and push")
+            print("docker build")
+            if args.push:
+                print("docker push")
             pp.pprint(image_dict)
             print("")
         else:
             image_tag = build_docker_image(image_dict, verbose=args.verbose)
-            push_docker_image(image_tag, verbose=args.verbose)
+            if args.push:
+                push_docker_image(image_tag, verbose=args.verbose)
 
         # TO-DO: add option to send an email with the output of the build and the logs
 

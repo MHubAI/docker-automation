@@ -107,7 +107,7 @@ def main():
             print("")
         else:
             image_tag = build_docker_image(image_dict, verbose=args.verbose)
-            #push_docker_image(image_tag, verbose=args.verbose)
+            push_docker_image(image_tag, verbose=args.verbose)
 
 
 if __name__ == '__main__':
