@@ -15,9 +15,6 @@ import time
 import argparse
 import subprocess
 
-#import logging
-#import logging.config
-
 import yaml
 import pprint
 
