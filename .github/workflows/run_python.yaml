@@ -1,4 +1,4 @@
-name: run run_automation.py
+name: Automate build of all docker images
 
 on:
   push:
@@ -38,4 +38,4 @@ jobs:
 
       - name: execute python script
         run: python ./src/github_automation.py --config "./config/github_actions/build_all.yaml"
-"""
+""""
