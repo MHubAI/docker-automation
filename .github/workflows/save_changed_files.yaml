@@ -17,6 +17,9 @@ jobs:
           repository: MHubAI/models
           path: ./models
 
+      - name: Create .github/files directory if it does not exist
+        run: mkdir -p .github/files
+
       - name: Create file with list of changed files
         run: echo "${{ steps.changed-files.outputs.files }}" > ./.github/files/changed-files.txt
 
