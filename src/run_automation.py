@@ -98,7 +98,7 @@ def main():
 
         # quick workaround to avoid passing the config dictionary to the `build_docker_image` function
         image_dict["repository_folder"] = config_dict["github"]["repository_folder"]
-        #image_dict["dockerhub_username"] = config_dict["dockerhub"]["username"]
+        image_dict["dockerhub_username"] = config_dict["dockerhub"]["username"]
 
         # TO-DO: add option to build only the images that have changed
         if args.dryrun:

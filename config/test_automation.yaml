@@ -1,5 +1,8 @@
 github:
     repository_folder: ./models
+
+dockerhub:
+    username: mhubai
     
 images:
     base_nocuda:
