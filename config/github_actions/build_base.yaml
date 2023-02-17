@@ -1,0 +1,24 @@
+github:
+    repository_folder: ./models
+
+dockerhub:
+    username: mhubai
+    
+images:
+    base_nocuda:
+        name: base
+        version: nocuda
+        dockerfile: base/dockerfiles/nocuda/Dockerfile
+    base_cuda11.4:
+        name: base
+        version: cuda11.4
+        dockerfile: base/dockerfiles/cuda11.4/Dockerfile
+    base_cuda12.0:
+        name: base
+        version: cuda12.0
+        dockerfile: base/dockerfiles/cuda12.0/Dockerfile
+
+
+
+
+

@@ -1,0 +1,46 @@
+github:
+    repository_folder: ./models
+
+dockerhub:
+    username: mhubai
+
+images:
+    totalsegmentator_nocuda:
+        name: totalsegmentator
+        version: nocuda
+        dockerfile: models/totalsegmentator/dockerfiles/nocuda/Dockerfile
+    totalsegmentator_cuda11.4:
+        name: totalsegmentator
+        version: cuda11.4
+        dockerfile: models/totalsegmentator/dockerfiles/cuda11.4/Dockerfile
+    totalsegmentator_cuda12.0:
+        name: totalsegmentator
+        version: cuda12.0
+        dockerfile: models/totalsegmentator/dockerfiles/cuda12.0/Dockerfile
+
+    platipy_nocuda:
+        name: platipy
+        version: nocuda
+        dockerfile: models/platipy/dockerfiles/nocuda/Dockerfile
+    platipy_cuda11.4:  
+        name: platipy
+        version: cuda11.4
+        dockerfile: models/platipy/dockerfiles/cuda11.4/Dockerfile
+    platipy_cuda12.0:
+        name: platipy
+        version: cuda12.0
+        dockerfile: models/platipy/dockerfiles/cuda12.0/Dockerfile
+
+    nnunet_liver_nocuda:
+        name: nnunet_liver
+        version: nocuda
+        dockerfile: models/nnunet_liver/dockerfiles/nocuda/Dockerfile
+    nnunet_liver_cuda11.4: 
+        name: nnunet_liver
+        version: cuda11.4
+        dockerfile: models/nnunet_liver/dockerfiles/cuda11.4/Dockerfile
+    nnunet_liver_cuda12.0:
+        name: nnunet_liver
+        version: cuda12.0
+        dockerfile: models/nnunet_liver/dockerfiles/cuda12.0/Dockerfile
+    
