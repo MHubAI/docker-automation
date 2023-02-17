@@ -6,6 +6,7 @@ on:
   #schedule:
   #  - cron: '*/15 * * * *'
 
+"""
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,3 +38,4 @@ jobs:
 
       - name: execute python script
         run: python ./src/github_automation.py --config "./config/github_actions/build_all.yaml"
+"""
