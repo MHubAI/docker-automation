@@ -38,9 +38,9 @@ github:
 
 images:
     base_nocuda:
-        name: base
-        version: nocuda
-        dockerfile: base/dockerfiles/nocuda/Dockerfile
+        name: platipy
+        version: cuda11.4
+        dockerfile: models/platipy/dockerfiles/cuda11.4/Dockerfile
 
 
 

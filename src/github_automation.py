@@ -68,8 +68,6 @@ def push_docker_image(image_tag, verbose):
     # push the docker image to the registry
     # TO-DO: add checks on the docker push
     bash_command = ["docker", "push", "%s"%(image_tag)]
-
-    if not verbose: bash_command += ["--quiet"]
     
     output = subprocess.run(bash_command, check=True, text=True,
                             stdout=None if verbose else subprocess.DEVNULL,
