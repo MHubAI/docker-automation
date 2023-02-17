@@ -1,0 +1,30 @@
+name: run run_automation.py
+
+on:
+  push:
+    branches: [ "main" ]
+  #schedule:
+  #  - cron: '*/15 * * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v2 
+
+      - name: checkout https://github.com/MHubAI/models
+        uses: actions/checkout@v2 
+        with:
+          repository: MHubAI/models
+          path: ./models
+
+    - name: Create file with list of changed files
+      run: echo "${{ steps.changed-files.outputs.files }}" > ./.github/files/changed-files.txt
+
+    - name: Get list of changed files
+      id: changed-files
+      run: echo ::set-output name=files::$(git --git-dir ./models/.git diff --name-only HEAD~1)
+
+    - name: Print list of changed files
+      run: cat changed-files.txt
