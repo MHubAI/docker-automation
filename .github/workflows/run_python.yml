@@ -30,4 +30,4 @@ jobs:
           pip install -r ./requirements.txt
 
       - name: execute python script
-        run: python ./src/run_automation.py --config "./config/test.yaml"
+        run: python ./src/run_automation.py --config "./config/test_automation.yaml"
