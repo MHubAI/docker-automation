@@ -1,6 +1,6 @@
 name: Automate build of all docker images
 
-on:
+#on:
   #push:
   #  branches: [ "main" ]
   #schedule:
