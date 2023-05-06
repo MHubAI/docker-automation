@@ -89,6 +89,15 @@ images:
         version: cuda12.0
         dockerfile: models/nnunet_liver/dockerfiles/cuda12.0/Dockerfile
     
+    casust_cuda12.0:
+        name: casust
+        version: cuda12.0
+        dockerfile: models/casust/dockerfiles/cuda12.0/Dockerfile
+
+    lungmask_cuda12.0:
+        name: lungmask
+        version: cuda12.0
+        dockerfile: models/lungmask/dockerfiles/cuda12.0/Dockerfile
 
 
 

@@ -78,39 +78,13 @@ def push_docker_image(image_tag, verbose):
                             stderr=None if verbose else subprocess.DEVNULL)
 
 
-def get_dotgit_folder(path_to_folder):
-
-    # check the folder exists
-    if not os.path.exists(path_to_folder):
-        raise FileNotFoundError("Folder %s not found"%path_to_folder)
-    
-    # check if the specified folder is already a .git repository
-    # if not, check the .git repository exists and is a folder, otherwise raise an error
-    if ".git" in path_to_folder:
-        path_to_dotgit_folder = path_to_folder
-    else:
-        if not os.path.exists(os.path.join(path_to_folder, ".git")):
-            raise FileNotFoundError("Folder %s not found"%os.path.join(path_to_folder, ".git"))
-
-        path_to_dotgit_folder = os.path.join(path_to_folder, ".git")
-
-    return path_to_dotgit_folder
-
-
 ## --------------------------------
 
-def get_git_hash(path_to_folder, source):
-
-    # check source is valid
-    # TO-DO: add checks on other branches? Does it even make sense?
-    if source not in ["HEAD", "origin/main"]:
-        raise ValueError("Source %s is not valid"%source)
-
-    path_to_dotgit_folder = get_dotgit_folder(path_to_folder)
+def get_git_hash(path_to_repo):
 
     # bash command to get the current commit hash
     bash_command =  ["git",
-                     "--git-dir", "%s"%path_to_dotgit_folder,
+                     "-C", "%s"%path_to_repo,
                      "rev-parse", "--verify", "HEAD"]
 
     # run git in subprocess
@@ -122,16 +96,54 @@ def get_git_hash(path_to_folder, source):
 
     return commit_hash
 
+## --------------------------------
+
+def get_git_hash_remote(repo_url):
+        
+        # bash command to get the current commit hash
+        bash_command =  ["git",
+                        "ls-remote", "--heads",
+                        "%s"%repo_url, "refs/heads/main"]
+    
+        # run git in subprocess
+        process = subprocess.Popen(bash_command, stdout=subprocess.PIPE)
+        # get the output of the git command
+        output, error = process.communicate()
+        # decode the output
+        commit_hash = output.decode('utf-8').strip()
+        commit_hash = commit_hash.split("\t")[0]
+    
+        return commit_hash
 
 ## --------------------------------
 
-def git_pull(path_to_folder):
+def get_list_of_updated_folders(path_to_repo):
 
-    path_to_dotgit_folder = get_dotgit_folder(path_to_folder)
+    # bash command to get the list of folders changed in the last commit
+    bash_command =  ["git",
+                     "-C", "%s"%path_to_repo,
+                     "diff", "--name-only", "HEAD~2...HEAD"]
+    
+    # run git in subprocess
+    process = subprocess.Popen(bash_command, stdout=subprocess.PIPE)
+    # get the output of the git command
+    output, error = process.communicate()
+    # decode the output
+    updated_folders = output.decode('utf-8').strip().split("\n")
+
+    # for each entry in the list, separate the file name from the path
+    updated_folders = [os.path.dirname(f) for f in updated_folders]
+
+    return updated_folders
+
+
+## --------------------------------
+
+def git_pull(path_to_repo):
 
     # bash command to get the current commit hash
     bash_command =  ["git",
-                     "--git-dir", "%s"%path_to_dotgit_folder,
+                     "-C", "%s"%path_to_repo,
                      "pull"]
 
     # run git in subprocess
@@ -156,9 +168,10 @@ def main():
     parser = argparse.ArgumentParser(description='MHub - local automation for docker builds')
     #parser.add_argument('-l', '--logging', action='store_true', help='enable logging')
     parser.add_argument('-v', '--verbose', action='store_true', help='enable verbose mode')
-    parser.add_argument('--dryrun', action='store_true', help='execute in dry run mode')
+    parser.add_argument('-d', '--dryrun', action='store_true', help='execute in dry run mode')
     parser.add_argument('-c', '--config', action='store', help='path to config file', required=True)
     parser.add_argument('-p', '--push', action='store_true', help='whether to push the images or not')
+    parser.add_argument('-u', '--updated-only', action='store_true', help='whether to build only the updated images')
 
     args = parser.parse_args()
 
@@ -171,18 +184,22 @@ def main():
     #   https://stackoverflow.com/questions/14989858/get-the-current-git-hash-in-a-python-script
     # - using subprocess:
     #   https://stackoverflow.com/questions/949314/how-do-i-get-the-hash-for-the-current-commit-in-git
-    commit_hash = get_git_hash(path_to_folder = config_dict["github"]["repository_folder"],
-                               source = "HEAD")
-    remote_hash = get_git_hash(path_to_folder = config_dict["github"]["repository_folder"],
-                               source = "origin/main")
+    commit_hash = get_git_hash(path_to_repo = config_dict["github"]["repository_folder"])
+    remote_hash = get_git_hash_remote(repo_url = config_dict["github"]["repository_url"])
+
+    if args.verbose:
+        print("Commit hash:", commit_hash)
+        print("Remote hash:", remote_hash, "\n")
 
     # if the two hashes are different, pull the latest changes
     if commit_hash != remote_hash:
         if args.dryrun:
-            print("git pull %s"%config_dict["github"]["repository_folder"])
+            print("git pull %s \n"%config_dict["github"]["repository_folder"])
         else:
-            print(git_pull(path_to_folder = config_dict["github"]["repository_folder"]))
+            print(git_pull(path_to_repo = config_dict["github"]["repository_folder"]))
 
+    # get the list of changed folders
+    updated_folders = get_list_of_updated_folders(path_to_repo = config_dict["github"]["repository_folder"])
 
     # for every image in the config file, build the docker image and push it to the registry
     for image in config_dict["images"]:
@@ -193,6 +210,17 @@ def main():
         # quick workaround to avoid passing the config dictionary to the `build_docker_image` function
         image_dict["repository_folder"] = config_dict["github"]["repository_folder"]
         image_dict["dockerhub_username"] = config_dict["dockerhub"]["username"]
+
+        skip_build = False
+        # if the option to build only the updated images is enabled, check if the image has changed
+        if args.updated_only:
+
+            # if at least one file in the model directory was updated, build the image - otherwise continue
+            for folder in updated_folders:
+                if not image_dict["name"] in folder:
+                    skip_build = True
+
+        if skip_build: continue
 
         # TO-DO: add option to build only the images that have changed
         if args.dryrun:
