@@ -1,8 +1,15 @@
 # docker-automation
-Automating docker builds from a local node.
+
+Tools for automating various MHubAI-related docker actions from a local node (and GitHub actions).
 
 
-Before running the script, make sure the repository to which the script is pointing at is up to date (it should pull automatically anyways, but still). On W2-S1, the path to the repository should be:
+## Automated Testing
+
+
+
+## Build and Push
+
+Before running the script, make sure the repository to which the script is pointing to is up to date (it should pull automatically anyways, but still). On W2-S1, the path to the repository should be:
 
 ```
 /home/mhub/git/mhubai-org/models
@@ -20,4 +27,4 @@ python local.py --push --config ../config/local/build_all.yaml
 ```
 
 
-The first command runs a dryrun so the user can check everything looks good. Once that checks out, you're free to run the second command.
+The first command runs a dry run so the user can check everything looks good. Once that checks out, you're free to run the second command.
