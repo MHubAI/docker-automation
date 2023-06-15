@@ -19,10 +19,10 @@ To run the script, `cd` in the source directory of the docker-automation reposit
 
 ```
 # exec a dryrun before the actual build and push run
-python local.py --push --config ../config/local/build_all.yaml --dryrun
+python run.py --push --config ../config/build_all.yaml --dryrun
 
 # run the script 
-python local.py --push --config ../config/local/build_all.yaml
+python run.py --push --config ../config/build_all.yaml
 
 ```
 
