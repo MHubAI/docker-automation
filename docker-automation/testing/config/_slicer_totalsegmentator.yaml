@@ -1,0 +1,56 @@
+# This file should contain everything needed to run the MHub totalsegmentator testing routine
+# NOTE: here we assume the location, the formats and a bunch of other information about the input and
+#       output data are known to the user running the script. This is by design, as the user should
+#       know what data the pipeline is getting tested on. Plus, once the sample data are chosen
+#       the plan is not to change them around too much.
+
+# This YAML entry defines where the input data is stored and where the ouput data should be stored
+# If the output of the pipeline changes in format of name, the user will need to update this snippet
+# Also, make sure to have the correct read/write permissions on the folders the data are in.
+
+# docker image to use for the testing
+images:
+    # the name of the entries does not really make a difference, but it should be unique
+    totalsegmentator_cuda11.4:
+        name: totalsegmentator
+        version: cuda11.4
+
+    totalsegmentator_cuda12.0:
+        name: totalsegmentator
+        version: cuda12.0
+
+
+# sample data n.1
+sample_1:
+    name: "Slicer sample data (Chest CT)"
+    bodypartexamined: "CHEST"
+    modality: "CT"
+
+    # FIXME: add config arguments here?
+
+    workflow:
+        dicom:
+            # everything that concerns the input data for the DICOM to DICOM workflow goes here
+            input_data:
+                base_folder: /home/dennis/Desktop/sample_data
+                foldername: input_dcm
+            # everything that concerns the output data for the DICOM to DICOM workflow goes here
+            output_data:
+                base_folder: /home/dennis/Desktop/sample_data/output_data
+                foldername: "1.2.826.0.1.3680043.8.498.99748665631895691356693177610672446391"
+                filename: TotalSegmentator.seg.dcm
+            # everything that concerns the data we want to compare the result of the pipeline to goes here
+            ground_truth:
+                base_folder: /home/mhubai/mhubai_testing/totalsegmentator
+                foldername: output_dcm
+                filename: TotalSegmentator.seg.dcm
+
+        # FIXME: discuss how to do this? (and if it makes any sense)
+        slicer:
+            # everything that concerns the input data for the 3DSlicer workflow goes here
+            input_data:
+                base_folder: /home/dennis/Desktop/sample_data
+                foldername: input_data
+                filename: image.nrrd
+            # everything that concerns the output data for the 3DSlicer workflow goes here
+            
