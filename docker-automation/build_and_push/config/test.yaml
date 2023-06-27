@@ -50,15 +50,6 @@ images:
         version: cuda12.0
         dockerfile: base/dockerfiles/cuda12.0/Dockerfile
 
-    thresholder_nocuda:
-        name: thresholder
-        version: nocuda
-        dockerfile: models/thresholder/dockerfiles/nocuda/Dockerfile
-
-    platipy_nocuda:
-        name: platipy
-        version: nocuda
-        dockerfile: models/platipy/dockerfiles/nocuda/Dockerfile
     platipy_cuda11.4:  
         name: platipy
         version: cuda11.4
@@ -68,7 +59,11 @@ images:
         version: cuda12.0
         dockerfile: models/platipy/dockerfiles/cuda12.0/Dockerfile
 
-    casust_cuda12.0:
-        name: casust
+    totalsegmentator_cuda11.4:  
+        name: totalsegmentator
+        version: cuda11.4
+        dockerfile: models/totalsegmentator/dockerfiles/cuda11.4/Dockerfile
+    totalsegmentator_cuda12.0:
+        name: totalsegmentator
         version: cuda12.0
-        dockerfile: models/casust/dockerfiles/cuda12.0/Dockerfile
+        dockerfile: models/totalsegmentator/dockerfiles/cuda12.0/Dockerfile
