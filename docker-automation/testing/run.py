@@ -27,6 +27,11 @@ pp = pprint.PrettyPrinter(indent=2)
 
 import utils
 
+# constants definition
+INPUT_BASE_DIR = "/home/mhubai/mhubai_testing/input_data"
+OUTPUT_BASE_DIR = "/home/mhubai/mhubai_testing/output_data"
+REFERENCE_BASE_DIR = "/home/mhubai/mhubai_testing/reference_data"
+
 # FIXME: for now, single thread/process only
 #max_cores = os.cpu_count()
 max_cores = 1
@@ -47,37 +52,40 @@ def run_core(test_dict):
         docker_command = test_dict["docker_command"]
         utils.run_mhub_model(docker_command)    
     except Exception as e:
-        print("Error running image %s"%test_dict["name"])
+        print("Error running image %s"%test_dict["image_to_test"])
         print(e)
         return None
 
-    # run some basic checks on the output
+    # compare the tree of the output directory to the reference
     try:       
-        utils.check_pipeline_run(test_dict)    
+        same_tree = utils.compare_results_dir(test_dict)    
     except Exception as e:
-        print("Error checking pipeline results for image %s"%test_dict["name"])
+        print("Error comparing results for image %s"%test_dict["image_to_test"])
         print(e)
         return None
 
-    # compare the output to the expected output
-    try:       
-        utils.compare_results(test_dict)    
-    except Exception as e:
-        print("Error comparing results for image %s"%test_dict["name"])
-        print(e)
-        return None
+    if same_tree:
+        print(">>> The directory tree of the output matches the expected output")
+    else:
+        print("WARNING: The directory tree of the output DOES NOT match the expected output")
+        return
+
+    # FIXME: this needs to become a compare_results_file that, based on the extension, calls the appropriate function
+    utils.compare_results_file(test_dict)
+
 
 ## --------------------------------
 
 def dryrun_core(test_dict):
+    print("")
     print("- Docker command to be executed:")
     print(" ".join(test_dict["docker_command"]))
 
-    print("- Ouput file to be generated:")
+    print("- Output dir to be generated:")
     print(test_dict["pipeline_output"])
 
-    print("- Ground truth file to be compared to:")
-    print(test_dict["ground_truth_output"])
+    print("- Reference dir to be compared to:")
+    print(test_dict["pipeline_reference"])
 
 ## --------------------------------
 
@@ -117,55 +125,56 @@ def main():
     # dict of versions of the MHub image to test
     mhub_images_dict = config_dict["images"]
 
-    test_sample_list = list()
-    test_sample_list = [x for x in list(config_dict.keys()) if "sample" in x]
-
-    # FIXME: parse this from command line or read all of the workflows?
-    workflows_list = ["dicom"]
+    workflows_list = list(config_dict["workflows"].keys())
 
     test_list = list()
 
     # FIXME: handle all of the following in a dedicated function?
     for mhub_image in mhub_images_dict.keys():
 
-        test_dict = dict()
         image_dict = config_dict["images"][mhub_image]
-
-        test_dict["image_to_test"] = "mhubai/" + image_dict["name"] + ":" + image_dict["version"]
-
-        for test_sample in test_sample_list:
-
-            test_sample_dict = config_dict[test_sample]
-            test_dict["sample_data_name"] = test_sample_dict["name"]
             
-            for workflow_name in workflows_list:
+        for workflow_name in workflows_list:
 
-                workflow_dict = test_sample_dict["workflow"][workflow_name]
+            test_dict = dict()
+            test_dict["image_to_test"] = "mhubai/" + image_dict["name"] + ":" + image_dict["version"]
+            
+            workflow_dict = config_dict["workflows"][workflow_name]
 
-                # build the docker command to run
-                test_dict["docker_command"] = utils.get_docker_command(
-                    image_to_test = test_dict["image_to_test"],
-                    workflow_dict = workflow_dict,
-                    use_gpu = args.gpu
-                    )
+            test_dict["workflow_name"] = workflow_name
+            test_dict["data_sample"] = workflow_dict["data_sample"]
+            test_dict["config"] = workflow_dict["config"]
 
-                test_dict["pipeline_output"] = os.path.join(
-                    workflow_dict["output_data"]["base_folder"],
-                    workflow_dict["output_data"]["folder_name"],
-                    workflow_dict["output_data"]["file_name"]
+            # build the docker command to run
+            test_dict["docker_command"] = utils.get_docker_command(
+                image_to_test = test_dict["image_to_test"],
+                workflow_name = workflow_name,
+                workflow_dict = workflow_dict,
+                input_base_dir = INPUT_BASE_DIR,
+                output_base_dir = OUTPUT_BASE_DIR,
+                use_gpu = args.gpu
                 )
 
-                test_dict["ground_truth_output"] = os.path.join(
-                    workflow_dict["ground_truth"]["base_folder"],
-                    workflow_dict["ground_truth"]["folder_name"],
-                    workflow_dict["ground_truth"]["file_name"]
-                )
+            test_dict["pipeline_output"] = os.path.join(
+                OUTPUT_BASE_DIR,
+                image_dict["name"],
+                workflow_dict["data_sample"],
+                workflow_name)
 
-                # append to the list of task to run (single proc./multi proc.)
-                test_list.append(test_dict)
+            test_dict["pipeline_reference"] = os.path.join(
+                REFERENCE_BASE_DIR,
+                image_dict["name"],
+                workflow_dict["data_sample"],
+                workflow_name)
+
+            # append to the list of task to run (single proc./multi proc.)
+            test_list.append(test_dict)
 
     if args.verbose:
-        print("Found %g image(s) to test on %g sample(s)"%(len(test_list), len(test_sample_list)))
+        print("Found %g image(s) to test running %g workflow(s)"%(len(test_list), len(workflows_list)))
+        
+        for test_dict in test_list:
+            print("- %s - %s"%(test_dict["image_to_test"], test_dict["workflow_name"]))
 
     # for every image in the config file, build the docker image and push it to the registry
     if use_multiprocessing:
@@ -176,26 +185,25 @@ def main():
             for _ in tqdm.tqdm(pool.imap_unordered(dryrun_core, test_list), total = len(test_list)):
                 pass
         else:
-            print("\nRunning in parallel on %g cores.\n"%(args.ncores))
+            print("Running in parallel on %g cores.\n"%(args.ncores))
             for _ in tqdm.tqdm(pool.imap_unordered(run_core, test_list), total = len(test_list)):
                 pass
 
     else:
-        print("Running on a single core.\n")
+        print("Running on a single core.")
         for idx, test_dict in  enumerate(test_list):
 
             if args.verbose:
-                print("Running test %g/%g"%(idx+1, len(test_list)))
+                print("\nRunning test %g/%g"%(idx+1, len(test_list)))
                 print("MHub image: %s"%test_dict["image_to_test"])
-                print("Sample data: %s"%test_dict["sample_data_name"])
+                print("Workflow: %s"%test_dict["workflow_name"])
+                print("Sample data: %s"%test_dict["data_sample"])
                 print("Using GPU") if args.gpu else print("Using CPU")
 
             if args.dryrun:
                 dryrun_core(test_dict)
             else:
                 run_core(test_dict)
-
-            if args.verbose: print("... Done \n")
 
 if __name__ == '__main__':
     main()

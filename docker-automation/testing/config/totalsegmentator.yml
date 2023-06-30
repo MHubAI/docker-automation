@@ -1,0 +1,32 @@
+# This file should contain everything needed to run the MHub totalsegmentator testing routine
+# NOTE: here we assume the location, the formats and a bunch of other information about the input and
+#       output data are known to the user running the script. This is by design, as the user should
+#       know what data the pipeline is getting tested on. Plus, once the sample data are chosen
+#       the plan is not to change them around too much.
+
+# This YAML entry defines where the input data is stored and where the ouput data should be stored
+# If the output of the pipeline changes in format of name, the user will need to update this snippet
+# Also, make sure to have the correct read/write permissions on the folders the data are in.
+
+# docker image to use for the testing
+images:
+    # the name of the entries does not really make a difference, but it should be unique
+    totalsegmentator_cuda11.4:
+        name: totalsegmentator
+        version: cuda11.4
+
+    totalsegmentator_cuda12.0:
+        name: totalsegmentator
+        version: cuda12.0
+
+workflows:
+    # this should identify the format of the input data
+    dicom:
+        # this should identify the body part examined and the modality
+        data_sample: "chest_ct"
+        # FIXME: to change in "default"
+        config: "config.yml"
+    nrrd:
+    # this should identify the body part examined and the modality
+        data_sample: "chest_ct"
+        config: "slicer.yml"
