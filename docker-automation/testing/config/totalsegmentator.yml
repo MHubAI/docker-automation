@@ -11,21 +11,17 @@
 # docker image to use for the testing
 images:
     # the name of the entries does not really make a difference, but it should be unique
-    totalsegmentator_cuda11.4:
+    totalsegmentator:
         name: totalsegmentator
-        version: cuda11.4
-
-    totalsegmentator_cuda12.0:
-        name: totalsegmentator
-        version: cuda12.0
+        version: latest
 
 workflows:
     # this should identify the format of the input data
     dicom:
         # this should identify the body part examined and the modality
         data_sample: "chest_ct"
-        # FIXME: to change in "default"
-        config: "config.yml"
+        config: "default.yml"
+        
     nrrd:
     # this should identify the body part examined and the modality
         data_sample: "chest_ct"

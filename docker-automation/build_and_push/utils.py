@@ -12,6 +12,8 @@ import os
 import sys
 import time
 
+import fileinput
+
 import argparse
 import subprocess
 
@@ -251,10 +253,69 @@ def git_pull(path_to_repo):
         'Updating b45e63a71c..a1b2c3d4e5f'
     """
 
-    # bash command to get the current commit hash
+    # bash command to git pull
     bash_command =  ["git",
                      "-C", "%s"%path_to_repo,
                      "pull"]
+
+    # run git in subprocess
+    process = subprocess.Popen(bash_command, stdout=subprocess.PIPE)
+    # get the output of the git command
+    output, error = process.communicate()
+
+    return output
+
+## --------------------------------
+
+def modify_dockerfile(image_dict, branch):
+
+    # update the Dockerfile to pull the correct branch
+    rel_path_to_dockerfile = image_dict["dockerfile"]
+    path_to_dockerfile = os.path.join(image_dict["repository_folder"], rel_path_to_dockerfile)
+
+    # for both model and base images, replace the line that pulls the models repository
+    to_replace = "git fetch https://github.com/MHubAI/models.git main"
+    replace_with = "git fetch https://github.com/MHubAI/models.git %s"%branch
+
+    for line in fileinput.input(path_to_dockerfile, inplace=True): 
+        print(line.replace(to_replace, replace_with), end = "")
+    
+    fileinput.close()
+
+    # for model images only, replace the first line to build the image starting from the "branch" base image
+    if image_dict["name"] != "base":
+        to_replace = "FROM mhubai/base:latest"
+        replace_with = "FROM mhubai/base:%s"%branch
+
+        for line in fileinput.input(path_to_dockerfile, inplace=True): 
+            print(line.replace(to_replace, replace_with), end = "")
+        
+        fileinput.close()
+
+## --------------------------------
+
+def git_restore(path_to_repo):
+    
+    """
+    Performs a git restore operation on a local Git repository.
+
+    Args:
+        path_to_repo (str): The path to the local Git repository.
+
+    Returns:
+        bytes: The output of the git restore command.
+
+    Example:
+        >>> repo_path = "/path/to/repository"
+        >>> output = git_restore(repo_path)
+        >>> print(output.decode('utf-8'))
+        ' '
+    """
+
+    # bash command to git restore
+    bash_command =  ["git",
+                     "-C", "%s"%path_to_repo,
+                     "restore", "%s"%path_to_repo]
 
     # run git in subprocess
     process = subprocess.Popen(bash_command, stdout=subprocess.PIPE)

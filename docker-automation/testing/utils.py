@@ -33,7 +33,7 @@ pp = pprint.PrettyPrinter(indent=2)
 
 
 
-def get_docker_command(image_to_test, workflow_name, workflow_dict, input_base_dir, output_base_dir, use_gpu):
+def get_docker_command(image_to_test, workflow_name, workflow_dict, input_base_dir, output_base_dir, use_gpu, rm_container=True):
 
     """
     Generate a Docker command for running a container via subprocess.
@@ -72,14 +72,23 @@ def get_docker_command(image_to_test, workflow_name, workflow_dict, input_base_d
     docker_command += ["docker", "run"]
     docker_command += ["-v", path_to_input_data + ":" + map_input_data]
     docker_command += ["-v", path_to_output_data + ":" + map_output_data]
-    
+
+    if rm_container:
+        docker_command += ["--rm"]
+
     if use_gpu:
-        docker_command += ["--gpus", "all"]
+        docker_command += ["--gpus", "device=0"]
     
     docker_command += [image_to_test]
     
-    path_to_config = os.path.join("/app/models/%s/config"%model_name, workflow_dict["config"])
-    docker_command += ["python3", "-m", "mhubio.run", "--config", path_to_config]
+    #path_to_config = os.path.join("/app/models/%s/config"%model_name, workflow_dict["config"])
+    #docker_command += ["python3", "-m", "mhubio.run", "--config", path_to_config]
+
+    # FIXME: in the new Docker images, the entrypoint is set to "python3 -m mhubio.run"
+
+    # get the name of the file without the extension
+    config_name = os.path.splitext(workflow_dict["config"])[0]
+    docker_command += ["--workflow", config_name]
     
     return docker_command
         
