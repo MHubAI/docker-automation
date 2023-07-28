@@ -10,21 +10,18 @@
 
 # docker image to use for the testing
 images:
-    platipy:
-        name: platipy
-        version: patch-models
-    
+    # the name of the entries does not really make a difference, but it should be unique
     lungmask:
         name: lungmask
-        version: patch-models
+        version: latest
 
 workflows:
     # this should identify the format of the input data
     dicom:
         # this should identify the body part examined and the modality
         data_sample: "chest_ct"
+        # FIXME: to change in "default"
         config: "default.yml"
-        
     nrrd:
     # this should identify the body part examined and the modality
         data_sample: "chest_ct"

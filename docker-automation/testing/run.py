@@ -128,6 +128,7 @@ def main():
     workflows_list = list(config_dict["workflows"].keys())
 
     test_list = list()
+    image_name_list = list()
 
     # FIXME: handle all of the following in a dedicated function?
     for mhub_image in mhub_images_dict.keys():
@@ -138,7 +139,10 @@ def main():
 
             test_dict = dict()
             test_dict["image_to_test"] = "mhubai/" + image_dict["name"] + ":" + image_dict["version"]
-            
+
+            if test_dict["image_to_test"] not in image_name_list:
+                image_name_list.append(test_dict["image_to_test"])        
+
             workflow_dict = config_dict["workflows"][workflow_name]
 
             test_dict["workflow_name"] = workflow_name
@@ -171,7 +175,7 @@ def main():
             test_list.append(test_dict)
 
     if args.verbose:
-        print("Found %g image(s) to test running %g workflow(s)"%(len(test_list), len(workflows_list)))
+        print("Found %g image(s) to test running %g workflow(s)"%(len(image_name_list), len(workflows_list)))
         
         for test_dict in test_list:
             print("- %s - %s"%(test_dict["image_to_test"], test_dict["workflow_name"]))

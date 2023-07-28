@@ -61,11 +61,11 @@ def main():
     #parser.add_argument('-l', '--logging', action='store_true', help='enable logging')
     parser.add_argument('--verbose', action='store_true', help='enable verbose mode')
     parser.add_argument('--dryrun', action='store_true', help='execute in dry run mode')
-    parser.add_argument('--ncores', action='store', type=int, default=4,
-                        help='number of cores to execute on (max is %g)'%max_cores)
+    parser.add_argument('--ncores', action='store', help='number of cores to execute on (max is %g)'%max_cores, 
+                        type=int, default=4)
+    parser.add_argument('--branch', action='store', help='name of the branch to build the images from',
+                        type=str, default="main")
     parser.add_argument('--config', action='store', help='path to config file', required=True)
-    parser.add_argument('--push', action='store_true', help='whether to push the images or not')
-    parser.add_argument('--updated-only', action='store_true', help='whether to build only the updated images')
 
     args = parser.parse_args()
 
@@ -90,9 +90,6 @@ def main():
         else:
             print(utils.git_pull(path_to_repo = config_dict["github"]["repository_folder"]))
 
-    # get the list of changed folders
-    updated_folders = utils.get_list_of_updated_folders(path_to_repo = config_dict["github"]["repository_folder"])
-
     image_list = list()
 
     # populate a list of images to build (formatted in dictionaries)
@@ -105,19 +102,15 @@ def main():
         image_dict["repository_folder"] = config_dict["github"]["repository_folder"]
         image_dict["dockerhub_username"] = config_dict["dockerhub"]["username"]
 
-        skip_build = False
-        # if the option to build only the updated images is enabled, check if the image has changed
-        if args.updated_only:
+        # if a branch different from main is specified, append it to the image tag
+        # furthermore, modify the Dockerfiles to pull the correct branch
+        if args.branch != "main":
+            image_dict["version"] = args.branch
 
-            # if at least one file in the model directory was updated, build the image - otherwise continue
-            for folder in updated_folders:
-                if not image_dict["name"] in folder:
-                    skip_build = True
-
-        if skip_build: continue
+            # modify the Dockerfile
+            utils.modify_dockerfile(image_dict, branch = args.branch)
 
         image_list.append(image_dict)
-
 
     # for every image in the config file, build the docker image and push it to the registry
     if use_multiprocessing:
@@ -141,6 +134,15 @@ def main():
             print("Running on a single core.\n")
             for image_dict in image_list:
                 run_core(image_dict)
+
+    
+    # if a branch different from main is specified, revert the Dockerfiles to the original state
+    # by running a git restore command
+    if args.branch != "main":
+        if args.verbose:
+            print("git restore %s \n"%config_dict["github"]["repository_folder"])
+
+        utils.git_restore(path_to_repo = config_dict["github"]["repository_folder"])
 
 if __name__ == '__main__':
     main()

@@ -10,12 +10,33 @@
 
 # docker image to use for the testing
 images:
+    # the name of the entries does not really make a difference, but it should be unique
+    totalsegmentator:
+        name: totalsegmentator
+        version: patch-models
+
     platipy:
         name: platipy
         version: patch-models
     
     lungmask:
         name: lungmask
+        version: patch-models
+
+    casust:
+        name: casust
+        version: patch-models
+
+    gc_lunglobes:
+        name: gc_lunglobes
+        version: patch-models
+
+    nnunet_pancreas:
+        name: nnunet_pancreas
+        version: patch-models
+
+    nnunet_liver:
+        name: nnunet_liver
         version: patch-models
 
 workflows:

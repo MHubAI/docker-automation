@@ -11,9 +11,6 @@ github:
     # better if this is separated from the git folders users actually work into to avoid mess
     repository_folder: /home/mhubai/git/mhubai-org/models
     repository_url: https://github.com/MHubAI/models
-    
-    # useless for now, the premise is we always look at main anyhow
-    branch: main
 
 ## --------------------------------
 
@@ -37,20 +34,12 @@ github:
 #     in the dictionary below as the second key of the dictionary "images" (sub-key of the first key)
 
 images:
-    totalsegmentator_nocuda:
-        name: totalsegmentator
-        version: nocuda
-        dockerfile: models/totalsegmentator/dockerfiles/nocuda/Dockerfile
-    totalsegmentator_cuda11.4:
-        name: totalsegmentator
-        version: cuda11.4
-        dockerfile: models/totalsegmentator/dockerfiles/cuda11.4/Dockerfile
-    totalsegmentator_cuda12.0:
-        name: totalsegmentator
-        version: cuda12.0
-        dockerfile: models/totalsegmentator/dockerfiles/cuda12.0/Dockerfile
+    lungmask:
+        name: lungmask
+        version: latest
+        dockerfile: models/lungmask/dockerfiles/Dockerfile
 
-
-
-
-
+    platipy:
+        name: platipy
+        version: latest
+        dockerfile: models/platipy/dockerfiles/Dockerfile
