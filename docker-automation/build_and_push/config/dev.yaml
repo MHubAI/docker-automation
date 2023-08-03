@@ -34,10 +34,10 @@ github:
 #     in the dictionary below as the second key of the dictionary "images" (sub-key of the first key)
 
 images:
-    lungmask:
-        name: lungmask
+    base:
+        name: base
         version: latest
-        dockerfile: models/lungmask/dockerfiles/Dockerfile
+        dockerfile: base/dockerfiles/Dockerfile
 
     platipy:
         name: platipy

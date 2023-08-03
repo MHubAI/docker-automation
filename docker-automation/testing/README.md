@@ -1,221 +1,132 @@
-# MHub container automated testing pipeline
-
-## Running the testing pipeline
-
-The testing pipeline can be run with the following command:
+# MHub Container Automated Testing Pipeline
 
 ```
-python run.py --config config/totalsegmentator.yml --verbose --gpu
+usage: run.py [-h] [--verbose] [--gpu] [--dryrun] [--ncores NCORES] --config CONFIG
+
+MHub - automated testing of MHub containers
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --verbose        enable verbose mode
+  --gpu            enable verbose mode
+  --dryrun         execute in dry run mode
+  --ncores NCORES  number of cores to execute on (max is 1 for now)
+  --config CONFIG  path to config file
 ```
 
-See the script help for details. Example of the pipeline output:
-
-
-```
-dennis@W2-S1:~/git/mhubai-org/docker-automation/docker-automation/testing$ time python run.py --config config/totalsegmentator.yml --verbose --gpu 
-Found 4 image(s) to test running 2 workflow(s)
-- mhubai/totalsegmentator:cuda11.4 - dicom
-- mhubai/totalsegmentator:cuda11.4 - nrrd
-- mhubai/totalsegmentator:cuda12.0 - dicom
-- mhubai/totalsegmentator:cuda12.0 - nrrd
-Running on a single core.
-
-Running test 1/4
-MHub image: mhubai/totalsegmentator:cuda11.4
-Workflow: dicom
-Sample data: chest_ct
-Using GPU
-Data processing - running subprocess...
-... Done.
-
-Output directory: /home/mhubai/mhubai_testing/output_data/totalsegmentator/chest_ct/dicom
-Reference directory: /home/mhubai/mhubai_testing/reference_data/totalsegmentator/chest_ct/dicom
-Comparing the results with the reference...
-... Done.
->>> The directory tree of the output matches the expected output
->>> The DICOM SEG files are equal (DC threshold: 0.99)
-
-Running test 2/4
-MHub image: mhubai/totalsegmentator:cuda11.4
-Workflow: nrrd
-Sample data: chest_ct
-Using GPU
-Data processing - running subprocess...
-... Done.
-
-Output directory: /home/mhubai/mhubai_testing/output_data/totalsegmentator/chest_ct/nrrd
-Reference directory: /home/mhubai/mhubai_testing/reference_data/totalsegmentator/chest_ct/nrrd
-Comparing the results with the reference...
-... Done.
->>> The directory tree of the output matches the expected output
->>> The ITK image files are equal (DC/DC threshold: 0.99997/0.99)
->>> The JSON files are equal
-
-Running test 3/4
-MHub image: mhubai/totalsegmentator:cuda12.0
-Workflow: dicom
-Sample data: chest_ct
-Using GPU
-Data processing - running subprocess...
-... Done.
-
-Output directory: /home/mhubai/mhubai_testing/output_data/totalsegmentator/chest_ct/dicom
-Reference directory: /home/mhubai/mhubai_testing/reference_data/totalsegmentator/chest_ct/dicom
-Comparing the results with the reference...
-... Done.
->>> The directory tree of the output matches the expected output
->>> The DICOM SEG files are equal (DC threshold: 0.99)
-
-Running test 4/4
-MHub image: mhubai/totalsegmentator:cuda12.0
-Workflow: nrrd
-Sample data: chest_ct
-Using GPU
-Data processing - running subprocess...
-... Done.
-
-Output directory: /home/mhubai/mhubai_testing/output_data/totalsegmentator/chest_ct/nrrd
-Reference directory: /home/mhubai/mhubai_testing/reference_data/totalsegmentator/chest_ct/nrrd
-Comparing the results with the reference...
-... Done.
->>> The directory tree of the output matches the expected output
->>> The ITK image files are equal (DC/DC threshold: 0.99997/0.99)
->>> The JSON files are equal
-
-real	1m52,515s
-user	1m31,143s
-sys	0m11,694s
-```
+Example command:
 
 ```
-dennis@W2-S1:/home/mhubai/mhubai_testing$ tree output_data/
-output_data/
-└── totalsegmentator
-    └── chest_ct
-        ├── dicom
-        │   └── 1.2.826.0.1.3680043.8.498.99748665631895691356693177610672446391
-        │       └── TotalSegmentator.seg.dcm
-        └── nrrd
-            ├── segdef.json
-            └── segmentations.nii.gz
+python testing/run.py --config testing/config/dev.yml --gpu --dryrun --verbose
 ```
 
-## Config File
+## Config file
 
-Every image will require one configuration file. The configuration file should follow the structure below:
+The config file will be used to specify the parameters for testing the Docker images. The config file is a YAML file with the following structure:
+
+- Docker Images (`images`): This section defines the MHub images that will be tested. It consists of a dictionary with keys representing the names of the Docker images. Each image has the following attributes:
+    - `name`: The name of the Docker image .
+    - `version`: The version or tag of the Docker image to be used.
+
+- Workflows (`workflows`): This section defines the different workflows/scenarios for which every MHub container will be tested. It consists of a dictionary with keys (usually) representing the formats of the input data. Each workflow has the following attributes:
+    - `data_sample`: This should identify the body part examined and the modality of the input data.
+    - `config`: This specifies the name of the configuration file to be used for the workflow.
+
+An example of config file is shown below:
 
 ```
 images:
-    # the name of the entries does not really make a difference, but it should be unique
-    totalsegmentator_cuda11.4:
-        name: totalsegmentator
-        version: cuda11.4
-
-    totalsegmentator_cuda12.0:
-        name: totalsegmentator
-        version: cuda12.0
+    platipy:
+        name: platipy
+        version: patch-models
+    
+    lungmask:
+        name: lungmask
+        version: patch-models
 
 workflows:
-    # this should identify the format of the input data
     dicom:
-        # this should identify the body part examined and the modality
         data_sample: "chest_ct"
-        # FIXME: to change in "default"
-        config: "config.yml"
+        config: "default.yml"
+        
     nrrd:
-    # this should identify the body part examined and the modality
         data_sample: "chest_ct"
         config: "slicer.yml"
 ```
 
-Under `images` the user should specify the images to run the processing pipeline for and their versions.
-
-Under workflows, the user should specify the processing workflows (e.g., `dicom` for DICOM to DICOM, or `nrrd` for 3DSlicer) that should be automatically tested. For now, the name of the workflow corresponds to the input data (by design). The `config` field is used to specify the config file to use for the workflow. The config file should be located in the `config` folder under `/app/models/$MODEL_NAME` in the container.
-
-## Input Data
-
-Output data should be organized according to the following structure:
+The structure of the directory storing the reference files should match that of the config file in the following way:
 
 ```
-input_data/
-├── abdomen_ce_ct
-│   ├── dicom
-│   └── nrrd
-├── chest_ct
-│   ├── dicom
-│   └── nrrd
-└── wholebody_ct
-    ├── dicom
-    └── nrrd
+tree -L 3 reference_data/
+reference_data/
+└── platipy
+    └── chest_ct
+        ├── dicom
+        └── nrrd
 ```
 
-The base path to the input data folder(s) is hardcoded in the script as a constant:
+## Example Output
 
+``````
+python testing/run.py --config testing/config/dev.yml --gpu --dryrun --verbose
+
+Found 2 image(s) to test running 2 workflow(s)
+- mhubai/platipy:patch-models - dicom
+- mhubai/platipy:patch-models - nrrd
+- mhubai/lungmask:patch-models - dicom
+- mhubai/lungmask:patch-models - nrrd
+
+Running on a single core.
+
+Running test 1/4
+MHub image: mhubai/platipy:patch-models
+Workflow: dicom
+Sample data: chest_ct
+Using GPU
+
+- Docker command to be executed:
+docker run -v /home/mhubai/mhubai_testing/input_data/chest_ct/dicom:/app/data/input_data -v /home/mhubai/mhubai_testing/output_data/platipy/chest_ct/dicom:/app/data/output_data --rm --gpus device=0 mhubai/platipy:patch-models --workflow default
+- Output dir to be generated:
+/home/mhubai/mhubai_testing/output_data/platipy/chest_ct/dicom
+- Reference dir to be compared to:
+/home/mhubai/mhubai_testing/reference_data/platipy/chest_ct/dicom
+
+Running test 2/4
+MHub image: mhubai/platipy:patch-models
+Workflow: nrrd
+Sample data: chest_ct
+Using GPU
+
+- Docker command to be executed:
+docker run -v /home/mhubai/mhubai_testing/input_data/chest_ct/nrrd:/app/data/input_data -v /home/mhubai/mhubai_testing/output_data/platipy/chest_ct/nrrd:/app/data/output_data --rm --gpus device=0 mhubai/platipy:patch-models --workflow slicer
+- Output dir to be generated:
+/home/mhubai/mhubai_testing/output_data/platipy/chest_ct/nrrd
+- Reference dir to be compared to:
+/home/mhubai/mhubai_testing/reference_data/platipy/chest_ct/nrrd
+
+Running test 3/4
+MHub image: mhubai/lungmask:patch-models
+Workflow: dicom
+Sample data: chest_ct
+Using GPU
+
+- Docker command to be executed:
+docker run -v /home/mhubai/mhubai_testing/input_data/chest_ct/dicom:/app/data/input_data -v /home/mhubai/mhubai_testing/output_data/lungmask/chest_ct/dicom:/app/data/output_data --rm --gpus device=0 mhubai/lungmask:patch-models --workflow default
+- Output dir to be generated:
+/home/mhubai/mhubai_testing/output_data/lungmask/chest_ct/dicom
+- Reference dir to be compared to:
+/home/mhubai/mhubai_testing/reference_data/lungmask/chest_ct/dicom
+
+Running test 4/4
+MHub image: mhubai/lungmask:patch-models
+Workflow: nrrd
+Sample data: chest_ct
+Using GPU
+
+- Docker command to be executed:
+docker run -v /home/mhubai/mhubai_testing/input_data/chest_ct/nrrd:/app/data/input_data -v /home/mhubai/mhubai_testing/output_data/lungmask/chest_ct/nrrd:/app/data/output_data --rm --gpus device=0 mhubai/lungmask:patch-models --workflow slicer
+- Output dir to be generated:
+/home/mhubai/mhubai_testing/output_data/lungmask/chest_ct/nrrd
+- Reference dir to be compared to:
+/home/mhubai/mhubai_testing/reference_data/lungmask/chest_ct/nrrd
 ```
-# constants definition
-INPUT_BASE_DIR = "/home/mhubai/mhubai_testing/input_data"
-```
-
-The rest of the absolute path (to allow for mounting in the docker containers) is obtained from the config file. For example, if the config file specifies:
-
-```
-workflows:
-    dicom:
-        data_sample: "chest_ct"
-```
-
-The following will be asserted for the input data (and mounted in the docker container):
-
-```
-INPUT_BASE_DIR = "/home/mhubai/mhubai_testing/input_data"
-
-# mounted in the container
->>> path_to_input
-"/home/mhubai/mhubai_testing/input_data/chest_ct/dicom"
-
-```
-
-## Output and Reference Data
-
-
-The output and reference data should be organized according to the following structure (in the example of TotalSegmentator):
-
-```
-output_data/
-└── totalsegmentator
-    └── chest_ct
-        ├── dicom
-        │   └── 1.2.826.0.1.3680043.8.498.99748665631895691356693177610672446391
-        │       └── TotalSegmentator.seg.dcm
-        └── nrrd
-            ├── segdef.json
-            └── segmentations.nii.gz
-```
-
-The base path to the output data and reference data folders is hardcoded in the script as a constant:
-
-```
-# constants definition
-OUTPUT_BASE_DIR = "/home/mhubai/mhubai_testing/output_data"
-REFERENCE_BASE_DIR = "/home/mhubai/mhubai_testing/reference_data"
-```
-
-The rest of the absolute path (to allow for mounting in the docker containers) is obtained from the config file. For example, if the config file specifies:
-
-```
-workflows:
-    dicom:
-        data_sample: "chest_ct"
-```
-
-The following will be asserted for the input data (and mounted in the docker container):
-
-```
-OUTPUT_BASE_DIR = "/home/mhubai/mhubai_testing/output_data"
-
-# mounted in the container
->>> path_to_output
-"/home/mhubai/mhubai_testing/output_data/totalsegmentator/chest_ct/dicom"
-
-```
-
