@@ -80,11 +80,6 @@ def get_docker_command(image_to_test, workflow_name, workflow_dict, input_base_d
         docker_command += ["--gpus", "device=0"]
     
     docker_command += [image_to_test]
-    
-    #path_to_config = os.path.join("/app/models/%s/config"%model_name, workflow_dict["config"])
-    #docker_command += ["python3", "-m", "mhubio.run", "--config", path_to_config]
-
-    # FIXME: in the new Docker images, the entrypoint is set to "python3 -m mhubio.run"
 
     # get the name of the file without the extension
     config_name = os.path.splitext(workflow_dict["config"])[0]
@@ -111,9 +106,6 @@ def run_mhub_model(docker_command, verbose=False):
 ## --------------------------------
 
 def compare_results_file(test_dict, verbose=False):
-
-    # FIXME: debug
-    #verbose = True
 
     output_dir = test_dict["pipeline_output"]
 
