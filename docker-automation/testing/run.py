@@ -15,7 +15,6 @@ import tqdm
 
 import argparse
 import subprocess
-import multiprocessing
 
 #import logging
 #import logging.config
@@ -32,13 +31,8 @@ INPUT_BASE_DIR = "/home/mhubai/mhubai_testing/input_data"
 OUTPUT_BASE_DIR = "/home/mhubai/mhubai_testing/output_data"
 REFERENCE_BASE_DIR = "/home/mhubai/mhubai_testing/reference_data"
 
-# FIXME: for now, single thread/process only
-#max_cores = os.cpu_count()
-max_cores = 1
-
 ## --------------------------------
 
-# FIXME: for now, single thread/process only
 def run_core(test_dict):
     """
      The core function should run the following operations:
@@ -60,20 +54,33 @@ def run_core(test_dict):
     try:       
         same_tree = utils.compare_results_dir(test_dict)    
     except Exception as e:
-        print("Error comparing results for image %s"%test_dict["image_to_test"])
+        print("Error comparing directory trees for image %s"%test_dict["image_to_test"])
         print(e)
+        same_tree = False
         return None
 
     if same_tree:
         print(">>> The directory tree of the output matches the expected output")
     else:
         print("WARNING: The directory tree of the output DOES NOT match the expected output")
-        return
 
-    # FIXME: this needs to become a compare_results_file that, based on the extension, calls the appropriate function
-    utils.compare_results_file(test_dict)
+    try:
+        are_files_equal = utils.compare_results_file(test_dict)
+    except Exception as e:
+        print("Error comparing results for image %s"%test_dict["image_to_test"])
+        print(e)
+        are_files_equal = False
+        return None
 
-
+    with open(test_dict["output_file"], "a") as f:
+        f.write("%s,%s,%s,%s,%s\n"%(
+            test_dict["image_to_test"],
+            test_dict["workflow_name"],
+            test_dict["data_sample"],
+            same_tree,
+            are_files_equal
+            ))
+    
 ## --------------------------------
 
 def dryrun_core(test_dict):
@@ -103,24 +110,28 @@ def main():
     # FIXME: past this directly in the docker command?
     parser.add_argument('--gpu', action='store_true', help='enable verbose mode')
     parser.add_argument('--dryrun', action='store_true', help='execute in dry run mode')
-    parser.add_argument('--ncores', action='store', type=int, default=4,
-                        help='number of cores to execute on (max is %g)'%max_cores)
     parser.add_argument('--config', action='store', help='path to config file', required=True)
+    parser.add_argument('--outpath', action='store', help='path to the folder storing the output file', required=True)
 
-    # FIXME: what's the best way to handle this?
-    # FIXME: for now, support only DICOM to DICOM testing
-    #parser.add_argument('--test_dicom', action='store_true', help='test the DICOM to DICOM worflow')
-    #parser.add_argument('--test_slicer', action='store_true', help='test the NRRD to NRRD 3DSlicer worflow')
 
     args = parser.parse_args()
+    
+    # split the config file name from the path
+    config_name = os.path.basename(args.config).split(".yml")[0]
+    csv_fn = config_name + ".csv"
+    csv_path = os.path.join(args.outpath, csv_fn)
 
     # parse yaml config file
     with open(args.config, 'r') as f:
         config_dict = yaml.safe_load(f)
     
-    # FIXME: for now, single thread/process only
-    #use_multiprocessing = True if args.ncores > 1 else False
-    use_multiprocessing = False
+    # if the output file is already found, delete it
+    if os.path.isfile(csv_path):
+        os.remove(csv_path)
+
+    # initialize the output file
+    with open(csv_path, "a") as f:
+        f.write("image,workflow,data_sample,dirtree_match,output_match\n")
 
     # dict of versions of the MHub image to test
     mhub_images_dict = config_dict["images"]
@@ -138,6 +149,8 @@ def main():
         for workflow_name in workflows_list:
 
             test_dict = dict()
+
+            test_dict["output_file"] = csv_path
             test_dict["image_to_test"] = "mhubai/" + image_dict["name"] + ":" + image_dict["version"]
 
             if test_dict["image_to_test"] not in image_name_list:
@@ -171,7 +184,7 @@ def main():
                 workflow_dict["data_sample"],
                 workflow_name)
 
-            # append to the list of task to run (single proc./multi proc.)
+            # append to the list of task to run (single proc.)
             test_list.append(test_dict)
 
     if args.verbose:
@@ -180,34 +193,19 @@ def main():
         for test_dict in test_list:
             print("- %s - %s"%(test_dict["image_to_test"], test_dict["workflow_name"]))
 
-    # for every image in the config file, build the docker image and push it to the registry
-    if use_multiprocessing:
-        pool = multiprocessing.Pool(processes = args.ncores)
+    for idx, test_dict in  enumerate(test_list):
+
+        if args.verbose:
+            print("\nRunning test %g/%g"%(idx+1, len(test_list)))
+            print("MHub image: %s"%test_dict["image_to_test"])
+            print("Workflow: %s"%test_dict["workflow_name"])
+            print("Sample data: %s"%test_dict["data_sample"])
+            print("Using GPU") if args.gpu else print("Using CPU")
 
         if args.dryrun:
-            print("This will run in parallel, on %g cores.\n"%(args.ncores))
-            for _ in tqdm.tqdm(pool.imap_unordered(dryrun_core, test_list), total = len(test_list)):
-                pass
+            dryrun_core(test_dict)
         else:
-            print("Running in parallel on %g cores.\n"%(args.ncores))
-            for _ in tqdm.tqdm(pool.imap_unordered(run_core, test_list), total = len(test_list)):
-                pass
-
-    else:
-        print("Running on a single core.")
-        for idx, test_dict in  enumerate(test_list):
-
-            if args.verbose:
-                print("\nRunning test %g/%g"%(idx+1, len(test_list)))
-                print("MHub image: %s"%test_dict["image_to_test"])
-                print("Workflow: %s"%test_dict["workflow_name"])
-                print("Sample data: %s"%test_dict["data_sample"])
-                print("Using GPU") if args.gpu else print("Using CPU")
-
-            if args.dryrun:
-                dryrun_core(test_dict)
-            else:
-                run_core(test_dict)
+            run_core(test_dict)
 
 if __name__ == '__main__':
     main()

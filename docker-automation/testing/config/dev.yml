@@ -10,13 +10,30 @@
 
 # docker image to use for the testing
 images:
-    platipy:
-        name: platipy
-        version: patch-models
+    # the name of the entries does not really make a difference, but it should be unique
+    totalsegmentator:
+        name: totalsegmentator
+        version: latest
     
     lungmask:
         name: lungmask
-        version: patch-models
+        version: latest
+
+    casust:
+        name: casust
+        version: latest
+
+    gc_lunglobes:
+        name: gc_lunglobes
+        version: latest
+
+    nnunet_pancreas:
+        name: nnunet_pancreas
+        version: latest
+
+    nnunet_liver:
+        name: nnunet_liver
+        version: latest
 
 workflows:
     # this should identify the format of the input data

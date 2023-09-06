@@ -38,33 +38,3 @@ images:
         name: base
         version: latest
         dockerfile: base/dockerfiles/Dockerfile
-    
-    totalsegmentator:
-        name: totalsegmentator
-        version: latest
-        dockerfile: models/totalsegmentator/dockerfiles/Dockerfile
-    
-    platipy:
-        name: platipy
-        version: latest
-        dockerfile: models/platipy/dockerfiles/Dockerfile
-    
-    nnunet_liver:
-        name: nnunet_liver
-        version: latest
-        dockerfile: models/nnunet_liver/dockerfiles/Dockerfile
-    
-    nnunet_pancreas:
-        name: nnunet_pancreas
-        version: latest
-        dockerfile: models/nnunet_pancreas/dockerfiles/Dockerfile
-    
-    casust:
-        name: casust
-        version: latest
-        dockerfile: models/casust/dockerfiles/Dockerfile
-
-    lungmask:
-        name: lungmask
-        version: latest
-        dockerfile: models/lungmask/dockerfiles/Dockerfile
