@@ -1,0 +1,69 @@
+# Note: the DockerHub secret needs to be stored on the node you want to use
+# for building and pushing images (login through docker)
+dockerhub:
+    username: mhubai
+
+# NOTE: the GitHub pull access needs to be setup for the specified repo
+#       on the node you want to use for building and pushing images
+#       (e.g., the GitHub repository should be public)
+github:
+    # better if this is separated from the git folders users actually work into to avoid mess
+    repository_folder: /home/mhubai/git/mhubai-org/models
+    repository_url: https://github.com/MHubAI/models
+
+## --------------------------------
+
+# NOTE: everything related to the timing of the build and push will be handled at a system level
+#       and not at the level of this script. This script will be called by a system cron job:
+#       https://stackoverflow.com/questions/10945806/how-to-add-a-cron-job-in-linux
+
+
+## --------------------------------
+
+# repository structure: which Dockerfiles should be built and pushed automatically
+
+# relative path (wrt `folder`) of the docker images to build
+# the images will be tagged following the structure:
+# $DOCKERHUB_USERNAME/$REPOSITORY:$TAG
+# where:
+#   - $DOCKERHUB_USERNAME is set above
+#   - $REPOSITORY is the name of model folder, specified in the dictionary below as the first  
+#     key of the dictionary "images"
+#   - $TAG is the name of the subfolder in `dockerfiles` where the Dockerfile is found, specified 
+#     in the dictionary below as the second key of the dictionary "images" (sub-key of the first key)
+
+images:
+    totalsegmentator:
+        name: totalsegmentator
+        version: latest
+        dockerfile: models/totalsegmentator/dockerfiles/Dockerfile
+
+    platipy:
+        name: platipy
+        version: latest
+        dockerfile: models/platipy/dockerfiles/Dockerfile
+
+    nnunet_liver:
+        name: nnunet_liver
+        version: latest
+        dockerfile: models/nnunet_liver/dockerfiles/Dockerfile
+
+    nnunet_pancreas:
+        name: nnunet_pancreas
+        version: latest
+        dockerfile: models/nnunet_pancreas/dockerfiles/Dockerfile
+
+    casust:
+        name: casust
+        version: latest
+        dockerfile: models/casust/dockerfiles/Dockerfile
+
+    lungmask:
+        name: lungmask
+        version: latest
+        dockerfile: models/lungmask/dockerfiles/Dockerfile
+
+    gc_lunglobes:
+        name: gc_lunglobes
+        version: latest
+        dockerfile: models/gc_lunglobes/dockerfiles/Dockerfile

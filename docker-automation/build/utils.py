@@ -323,3 +323,4 @@ def git_restore(path_to_repo):
     output, error = process.communicate()
 
     return output
+

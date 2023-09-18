@@ -11,15 +11,10 @@ Email:  dbontempi@bwh.harvard.edu
 import os
 import sys
 import time
+import requests
 
-import fileinput
-
-import argparse
+import json
 import subprocess
-
-# TO-DO: add logging
-#import logging
-#import logging.config
 
 import yaml
 import pprint
@@ -53,5 +48,3 @@ def push_docker_image(image_tag, verbose=False):
     output = subprocess.run(bash_command, check=True, text=True,
                             stdout=None if verbose else subprocess.DEVNULL,
                             stderr=None if verbose else subprocess.DEVNULL)
-
-## --------------------------------
